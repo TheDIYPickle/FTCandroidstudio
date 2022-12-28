@@ -18,16 +18,17 @@ public class TeleOP extends LinearOpMode {
     DcMotor frontleftDrive;
     DcMotor frontrightDrive;
 
-    Servo leftClawServo;
-    Servo rightClawServo;
+    Servo verticalClawServo;
+    Servo horizontalClawServo;
 
     public BNO055IMU imu;
 
     public double angle;
 
-    public Toggle clawToggle = new Toggle(false);
-    public double[] leftClawPositions = new double[] {0.67, 0};
-    public double[] rightClawPositions = new double[] {0.67, 0};
+    public Toggle verticalClawToggle = new Toggle(false);
+    public Toggle horizontalClawToggle = new Toggle(false);
+    public double[] verticalClawPositions = new double[] {0.67, 0};
+    public double[] horizontalClawPositions = new double[] {0.67, 0};
 
 
 
@@ -46,8 +47,8 @@ public class TeleOP extends LinearOpMode {
 
         rv.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        leftClawServo = hardwareMap.servo.get("leftClaw");
-        rightClawServo = hardwareMap.servo.get("rightClaw");
+        verticalClawServo = hardwareMap.servo.get("leftClaw");
+        horizontalClawServo = hardwareMap.servo.get("rightClaw");
 
 
         backleftDrive = hardwareMap.get(DcMotor.class, "backleftDrive");
@@ -84,7 +85,8 @@ public class TeleOP extends LinearOpMode {
             boolean surpassUpperBound = (rv.getCurrentPosition() >= 4200);
             boolean surpassLowerBound = (rv.getCurrentPosition() <= 5);
 
-            telemetry.addData("Claw Active", clawToggle.state);
+            telemetry.addData("Vertical Claw Active", verticalClawToggle.state);
+            telemetry.addData("Horizontal Claw Active", horizontalClawToggle.state);
 
 
 
@@ -104,7 +106,6 @@ public class TeleOP extends LinearOpMode {
 
             angle = imu.getAngularOrientation().firstAngle;
             telemetry.addData("current Encoder value:",rv.getCurrentPosition());
-
 
             double x = gamepad1.left_stick_x;
             double y = -gamepad1.left_stick_y;
@@ -134,11 +135,12 @@ public class TeleOP extends LinearOpMode {
 
 
             //update the toggles
-            clawToggle.update(gamepad2.a);
+            verticalClawToggle.update(gamepad2.a);
+            horizontalClawToggle.update(gamepad2.b);
 
             //update the servos
-            leftClawServo.setPosition(leftClawPositions[clawToggle.state ? 1 : 0]);
-            rightClawServo.setPosition(rightClawPositions[clawToggle.state ? 1 : 0]);
+            verticalClawServo.setPosition(verticalClawPositions[verticalClawToggle.state ? 1 : 0]);
+            horizontalClawServo.setPosition(horizontalClawPositions[horizontalClawToggle.state ? 1 : 0]);
 
 
             telemetry.update();
