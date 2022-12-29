@@ -40,7 +40,7 @@ public class TeleOP extends LinearOpMode {
         rv = hardwareMap.dcMotor.get("arm");
         lv = hardwareMap.dcMotor.get("arm2");
 
-        lv.setDirection(DcMotorSimple.Direction.REVERSE);
+        //  lv.setDirection(DcMotorSimple.Direction.REVERSE);
         rv.setDirection(DcMotorSimple.Direction.REVERSE);
 
         lv.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -50,7 +50,7 @@ public class TeleOP extends LinearOpMode {
 
         verticalClawServo = hardwareMap.servo.get("leftClaw");
         horizontalClawServo = hardwareMap.servo.get("rightClaw");
-        rotatingServo = hardwareMap.servo.get("rotatingServo");
+        rotatingServo = hardwareMap.servo.get("turret");
 
         backleftDrive = hardwareMap.get(DcMotor.class, "backleftDrive");
         backrightDrive = hardwareMap.get(DcMotor.class, "backrightDrive");
@@ -81,12 +81,13 @@ public class TeleOP extends LinearOpMode {
 
         rv.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        // Please Change this
+        int rotatingPos = 36;
+
         while (opModeIsActive()) {
 
-            int rightSlidePos = rv.getCurrentPosition();
+            int rightSlidePos = -rv.getCurrentPosition();
             int leftSlidePos = lv.getCurrentPosition();
-            // Please Change this
-            int rotatingPos = 100;
 
             // [0] = lower bound
             // [1] = upper bound
@@ -124,22 +125,28 @@ public class TeleOP extends LinearOpMode {
                 leftSlidePower = Math.max(0, leftSlidePower);
             }
 
-            int rotatingEndPos = rotatingPos;
             float rotatingDeltaCoefficient = 1f;
             double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
-            rotatingEndPos += rotatingDelta;
-            rotatingEndPos %= rotatingBounds[1];
-            if (rotatingEndPos <= rotatingBounds[0]) {
-                rotatingEndPos = rotatingBounds[0];
+            rotatingPos += rotatingDelta;
+            if (rotatingPos <= rotatingBounds[0]) {
+                rotatingPos = rotatingBounds[0];
             }
-            rotatingServo.setPosition(rotatingEndPos);
 
-            lv.setPower(-leftSlidePower);
+            if (-rv.getCurrentPosition() <= 1050) {
+                rotatingPos = 36;
+            }
+
+            rotatingServo.setPosition(rotatingPos/280d);
+
+            telemetry.addData("Servo Position", rotatingPos);
+
+
+            lv.setPower(leftSlidePower);
             rv.setPower(-rightSlidePower);
 
 
             angle = imu.getAngularOrientation().firstAngle;
-            telemetry.addData("current Encoder value:",rv.getCurrentPosition());
+            telemetry.addData("current Encoder value:",-rv.getCurrentPosition());
 
             double x = gamepad1.left_stick_x;
             double y = -gamepad1.left_stick_y;
