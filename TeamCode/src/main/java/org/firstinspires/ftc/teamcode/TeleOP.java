@@ -20,6 +20,7 @@ public class TeleOP extends LinearOpMode {
 
     Servo verticalClawServo;
     Servo horizontalClawServo;
+    Servo rotatingServo;
 
     public BNO055IMU imu;
 
@@ -35,7 +36,7 @@ public class TeleOP extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // arm is the bots right hand motor
+        // linear slides
         rv = hardwareMap.dcMotor.get("arm");
         lv = hardwareMap.dcMotor.get("arm2");
 
@@ -49,7 +50,7 @@ public class TeleOP extends LinearOpMode {
 
         verticalClawServo = hardwareMap.servo.get("leftClaw");
         horizontalClawServo = hardwareMap.servo.get("rightClaw");
-
+        rotatingServo = hardwareMap.servo.get("rotatingServo");
 
         backleftDrive = hardwareMap.get(DcMotor.class, "backleftDrive");
         backrightDrive = hardwareMap.get(DcMotor.class, "backrightDrive");
@@ -82,27 +83,60 @@ public class TeleOP extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            boolean surpassUpperBound = (rv.getCurrentPosition() >= 4200);
-            boolean surpassLowerBound = (rv.getCurrentPosition() <= 5);
+            int rightSlidePos = rv.getCurrentPosition();
+            int leftSlidePos = lv.getCurrentPosition();
+            // Please Change this
+            int rotatingPos = 100;
+
+            // [0] = lower bound
+            // [1] = upper bound
+            int[] rightBounds = {5, 4200};
+            int[] leftBounds = {5, 4200};
+            int[] rotatingBounds = {0, 90};
+
+            boolean isRightUpperBoundReached = (rightSlidePos >= rightBounds[1]);
+            boolean isRightLowerBoundReached = (rightSlidePos <= rightBounds[0]);
+            boolean isLeftUpperBoundReached = (leftSlidePos >= leftBounds[1]);
+            boolean isLeftLowerBoundReached = (rightSlidePos <= leftBounds[0]);
+            // Please change this but it already works
+//            boolean isRotatingUpperBounds = (True);
+//            boolean isRotatingLowerBounds = (True);
 
             telemetry.addData("Vertical Claw Active", verticalClawToggle.state);
             telemetry.addData("Horizontal Claw Active", horizontalClawToggle.state);
-
-
 
             //Gamepad stick power inversed for some reason, easy fix
             //i.e. When R stick pushed up it returned negative values
 
             //Upper and Lower Bounds
-            double verticalSlidePower = -gamepad2.right_stick_y;
-            if(surpassUpperBound){
-                verticalSlidePower = Math.min(0, verticalSlidePower);
+            double rightSlidePower = -gamepad2.right_stick_y;
+            if(isRightUpperBoundReached){
+                rightSlidePower = Math.min(0, rightSlidePower);
+            } else if(isRightLowerBoundReached){
+                rightSlidePower = Math.max(0, rightSlidePower);
             }
-            if(surpassLowerBound){
-                verticalSlidePower = Math.max(0, verticalSlidePower);
+
+            //Upper and Lower Bounds
+            double leftSlidePower = -gamepad2.left_stick_y;
+            if(isLeftUpperBoundReached){
+                leftSlidePower = Math.min(0, leftSlidePower);
+            } else if(isLeftLowerBoundReached){
+                leftSlidePower = Math.max(0, leftSlidePower);
             }
-            rv.setPower(-verticalSlidePower);
-            lv.setPower(-verticalSlidePower);
+
+            int rotatingEndPos = rotatingPos;
+            float rotatingDeltaCoefficient = 1f;
+            double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
+            rotatingEndPos += rotatingDelta;
+            rotatingEndPos %= rotatingBounds[1];
+            if (rotatingEndPos <= rotatingBounds[0]) {
+                rotatingEndPos = rotatingBounds[0];
+            }
+            rotatingServo.setPosition(rotatingEndPos);
+
+            lv.setPower(-leftSlidePower);
+            rv.setPower(-rightSlidePower);
+
 
             angle = imu.getAngularOrientation().firstAngle;
             telemetry.addData("current Encoder value:",rv.getCurrentPosition());
@@ -141,7 +175,6 @@ public class TeleOP extends LinearOpMode {
             //update the servos
             verticalClawServo.setPosition(verticalClawPositions[verticalClawToggle.state ? 1 : 0]);
             horizontalClawServo.setPosition(horizontalClawPositions[horizontalClawToggle.state ? 1 : 0]);
-
 
             telemetry.update();
         }
