@@ -118,7 +118,7 @@ public class TeleOP extends LinearOpMode {
             }
 
             float rotationSpeed = 1f;
-            double rotationDirection = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotationSpeed; // 1 if right, -1 if left, 0 if neither.
+            double rotationDirection = (gamepad2.dpad_right ? 1 : (gamepad2.dpad_left ? -1 : 0)) * rotationSpeed; // 1 if right, -1 if left, 0 if neither.
             rotatingPos += rotationDirection;
             rotatingPos = Math.max(rotatingPos, rotatingBounds[0]);
             rotatingPos = Math.min(rotatingPos, rotatingBounds[1]);
