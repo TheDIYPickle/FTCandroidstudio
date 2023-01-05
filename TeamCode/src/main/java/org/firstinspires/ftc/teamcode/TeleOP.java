@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name="teleop")
 public class TeleOP extends LinearOpMode {
@@ -120,8 +121,7 @@ public class TeleOP extends LinearOpMode {
             float rotationSpeed = 1f;
             double rotationDirection = (gamepad2.dpad_right ? 1 : (gamepad2.dpad_left ? -1 : 0)) * rotationSpeed; // 1 if right, -1 if left, 0 if neither.
             rotatingPos += rotationDirection;
-            rotatingPos = Math.max(rotatingPos, rotatingBounds[0]);
-            rotatingPos = Math.min(rotatingPos, rotatingBounds[1]);
+            rotatingPos = Range.clip(rotatingPos, rotatingBounds[0], rotatingBounds[1]);
 
             if (-horizontalSlide.getCurrentPosition() <= 1050) {
                 rotatingPos = 36;
