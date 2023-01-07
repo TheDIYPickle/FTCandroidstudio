@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleops;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -39,6 +39,8 @@ public class TeleOP extends LinearOpMode {
         // linear slides
         rv = hardwareMap.dcMotor.get("arm");
         lv = hardwareMap.dcMotor.get("arm2");
+        int low = 43;
+        int high = 2700;
 
         //  lv.setDirection(DcMotorSimple.Direction.REVERSE);
         rv.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -80,6 +82,8 @@ public class TeleOP extends LinearOpMode {
         waitForStart();
 
         rv.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lv.setTargetPosition(low);
+        lv.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Please Change this
         int rotatingPos = 36;
@@ -94,6 +98,7 @@ public class TeleOP extends LinearOpMode {
             int[] rightBounds = {5, 4200};
             int[] leftBounds = {5, 4200};
             int[] rotatingBounds = {0, 90};
+            int targetPos=0;
 
             boolean isRightUpperBoundReached = (rightSlidePos >= rightBounds[1]);
             boolean isRightLowerBoundReached = (rightSlidePos <= rightBounds[0]);
@@ -118,31 +123,52 @@ public class TeleOP extends LinearOpMode {
             }
 
             //Upper and Lower Bounds
-            double leftSlidePower = -gamepad2.left_stick_y;
-            if(isLeftUpperBoundReached){
+            double leftSlidePower = 0.5;
+            /*if(isLeftUpperBoundReached){
                 leftSlidePower = Math.min(0, leftSlidePower);
             } else if(isLeftLowerBoundReached){
                 leftSlidePower = Math.max(0, leftSlidePower);
-            }
+            }*/
 
             float rotatingDeltaCoefficient = 1f;
             double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
-            rotatingPos += rotatingDelta;
+
             if (rotatingPos <= rotatingBounds[0]) {
                 rotatingPos = rotatingBounds[0];
             }
-
-            if (-rv.getCurrentPosition() <= 1050) {
+            //I changed the arm it checks for height. Originally it was checking the horizontal claw position and not the vertical so I fixed it
+            if (-lv.getCurrentPosition() <= 1050) {
                 rotatingPos = 36;
             }
+            //Also I moved the movement command into this else statement. This will only activate if the vertical arm is over a certain point
+            else
+            {
+                rotatingPos += rotatingDelta;
+            }
+
 
             rotatingServo.setPosition(rotatingPos/280d);
 
             telemetry.addData("Servo Position", rotatingPos);
+            //Potential arm control system
+            if(gamepad2.dpad_up)
+            {
+                targetPos=high;
+            }
+            else if(gamepad2.dpad_down)
+            {
+                targetPos=low;
+            }
+            else if(!gamepad2.dpad_down && !gamepad2.dpad_up)
+            {
+                targetPos=lv.getCurrentPosition();
+            }
 
 
             lv.setPower(leftSlidePower);
             rv.setPower(-rightSlidePower);
+
+            lv.setTargetPosition(targetPos);
 
 
             angle = imu.getAngularOrientation().firstAngle;
