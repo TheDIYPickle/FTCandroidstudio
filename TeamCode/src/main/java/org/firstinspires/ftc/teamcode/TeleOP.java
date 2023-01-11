@@ -42,6 +42,8 @@ public class TeleOP extends LinearOpMode {
         int lowTarget = 5;
         int highTarget = 4200;
 
+
+
         //  lv.setDirection(DcMotorSimple.Direction.REVERSE);
         horizontalSlide.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -90,6 +92,8 @@ public class TeleOP extends LinearOpMode {
         // Please Change this
         double rotatingPos = 36;
         int turretPos=0;
+        double turretLoc=0;
+        int targetPos=0;
 
         while (opModeIsActive()) {
 
@@ -101,8 +105,8 @@ public class TeleOP extends LinearOpMode {
             int[] rightBounds = {5, 4200};
             int[] leftBounds = {5, 4200};
 
-            double[] rotatingBounds = {25/280d, 220/280d, 50/280d};
-            int targetPos=0;
+            double[] rotatingBounds = {31/280d, 220/280d, 50/280d};
+
 
 
             boolean isRightUpperBoundReached = (rightSlidePos >= rightBounds[1]);
@@ -121,17 +125,17 @@ public class TeleOP extends LinearOpMode {
 
             //Upper and Lower Bounds
             /*double horizontalSlidePower = horizontalSlide[];
-             */
+            */
             double horizontalSlidePower = 0;
             if(gamepad1.dpad_up && !isRightUpperBoundReached)
             {
                 telemetry.addData("Pos", "1");
-                horizontalSlidePower = -0.5;
+                horizontalSlidePower = -0.7;
             }
             else if(gamepad1.dpad_down && !isRightLowerBoundReached)
             {
                 telemetry.addData("Pos", "2");
-                horizontalSlidePower = 0.5;
+                horizontalSlidePower = 0.7;
             }
 
             /*if(isRightUpperBoundReached){
@@ -164,18 +168,32 @@ public class TeleOP extends LinearOpMode {
                 if (gamepad2.right_trigger < 0.5)
                 {
                     turretPos = 0;
+                    turretLoc=1;
                 }
             }
             else if(verticalSlide.getCurrentPosition()>1050)
             {
+                if(turretPos==1 && gamepad2.left_trigger>0.5)
+                {
+                    if(gamepad2.dpad_right)
+                    {
+                        turretLoc+=1;
+                    }
+                    else if(gamepad2.dpad_left)
+                    {
+                        turretLoc-=1;
+                    }
+                }
 
-                if(gamepad2.dpad_right)
+                else if(gamepad2.dpad_right)
                 {
                     turretPos=1;
+
                 }
                 else if(gamepad2.dpad_left)
                 {
                     turretPos=0;
+                    turretLoc=0;
                 }
 
             }
@@ -184,10 +202,19 @@ public class TeleOP extends LinearOpMode {
                 if (gamepad2.right_trigger > 0.5)
                 {
                     turretPos = 2;
+                    if(gamepad2.dpad_right)
+                    {
+                        turretLoc+=1;
+                    }
+                    else if(gamepad2.dpad_left)
+                    {
+                        turretLoc-=1;
+                    }
                 }
                 else if (gamepad2.right_trigger < 0.5)
                 {
                     turretPos = 0;
+                    turretLoc=1;
                 }
             }
 
@@ -198,8 +225,10 @@ public class TeleOP extends LinearOpMode {
             double testNum=rotatingPos/280d;
 
             telemetry.addData("NUM: ", testNum);
+            telemetry.addData("Turret loc: ", turretLoc);
+            telemetry.addData("Pos: ", rotatingBounds[turretPos]+(turretLoc/280d));
 
-            rotatingServo.setPosition(rotatingBounds[turretPos]);
+            rotatingServo.setPosition(rotatingBounds[turretPos]+(turretLoc/280d));
 
             double trueLeftVal = -gamepad2.left_stick_y;
 
@@ -280,7 +309,7 @@ public class TeleOP extends LinearOpMode {
 
             //update the toggles
             verticalClawToggle.update(gamepad2.a);
-            horizontalClawToggle.update(gamepad2.b);
+            horizontalClawToggle.update(gamepad1.b);
             /*if(gamepad2.a)
             {
                 verticalClawServo.setPosition(verticalClawPositions[1]);
