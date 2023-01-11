@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name="teleop")
 public class TeleOP extends LinearOpMode {
@@ -43,6 +42,8 @@ public class TeleOP extends LinearOpMode {
         int lowTarget = 5;
         int highTarget = 4200;
 
+
+
         //  lv.setDirection(DcMotorSimple.Direction.REVERSE);
         horizontalSlide.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -69,6 +70,8 @@ public class TeleOP extends LinearOpMode {
         backrightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontleftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontrightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        horizontalSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        verticalSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -77,6 +80,7 @@ public class TeleOP extends LinearOpMode {
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
 
         imu.initialize(parameters);
+
 
 
 
@@ -89,18 +93,29 @@ public class TeleOP extends LinearOpMode {
         // Please Change this
         double rotatingPos = 36;
         int turretPos=0;
+        double turretLoc=0;
+        int targetPos=0;
 
         while (opModeIsActive()) {
+            telemetry.addData("direction", imu.getAngularOrientation());
+
+            if(gamepad1.y)
+            {
+                imu.initialize(parameters);
+                
+
+            }
 
             int rightSlidePos = -horizontalSlide.getCurrentPosition();
             int leftSlidePos = verticalSlide.getCurrentPosition();
 
             // [0] = lower bound
             // [1] = upper bound
-            int[] rightBounds = {5, 4200};
+            int[] rightBounds = {5, 4100};
             int[] leftBounds = {5, 4200};
-            double[] rotatingBounds = {25/280d, 200/280d, 50/280d};
-            int targetPos=0;
+
+            double[] rotatingBounds = {31/280d, 220/280d, 50/280d};
+
 
 
             boolean isRightUpperBoundReached = (rightSlidePos >= rightBounds[1]);
@@ -118,15 +133,30 @@ public class TeleOP extends LinearOpMode {
             //i.e. When R stick pushed up it returned negative values
 
             //Upper and Lower Bounds
-            double horizontalSlidePower = -gamepad2.right_stick_y;
-            if(isRightUpperBoundReached){
-                horizontalSlidePower = Math.min(0, horizontalSlidePower);
-            } else if(isRightLowerBoundReached){
-                horizontalSlidePower = Math.max(0, horizontalSlidePower);
+            /*double horizontalSlidePower = horizontalSlide[];
+             */
+            double horizontalSlidePower = 0;
+            if(gamepad1.dpad_up && !isRightUpperBoundReached)
+            {
+                telemetry.addData("Pos", "1");
+                horizontalSlidePower = -0.7;
+            }
+            else if(gamepad1.dpad_down && !isRightLowerBoundReached)
+            {
+                telemetry.addData("Pos", "2");
+                horizontalSlidePower = 0.7;
             }
 
+            /*if(isRightUpperBoundReached){
+                telemetry.addData("Pos", "3");
+                horizontalSlidePower = Math.min(0, horizontalSlidePower);
+            } else if(isRightLowerBoundReached){
+                telemetry.addData("Pos", "4");
+                horizontalSlidePower = Math.max(0, horizontalSlidePower);
+            }*/
+
             //Upper and Lower Bounds
-            double verticalSlidePower = 0.5;
+            double verticalSlidePower = 0.75;
             //double horizontalSlidePower = 0;
 
             /*if(isLeftUpperBoundReached){
@@ -142,37 +172,61 @@ public class TeleOP extends LinearOpMode {
                 rotatingPos = rotatingBounds[0];
             }
 
-            if(verticalSlide.getCurrentPosition()<100 && verticalSlide.getCurrentPosition()<=1050)
+            if(verticalSlide.getCurrentPosition()<100)
             {
                 if (gamepad2.right_trigger < 0.5)
                 {
                     turretPos = 0;
-                }
-            }
-            else if(verticalSlide.getCurrentPosition()>=100 && verticalSlide.getCurrentPosition()<=1050)
-            {
-                if (gamepad2.right_trigger > 0.5)
-                {
-                    turretPos = 2;
-                }
-                else if (gamepad2.right_trigger < 0.5)
-                {
-                    turretPos = 0;
+                    turretLoc=1;
                 }
             }
             else if(verticalSlide.getCurrentPosition()>1050)
             {
+                if(turretPos==1 && gamepad2.left_trigger>0.5)
+                {
+                    if(gamepad2.dpad_right)
+                    {
+                        turretLoc+=1;
+                    }
+                    else if(gamepad2.dpad_left)
+                    {
+                        turretLoc-=1;
+                    }
+                }
 
-                if(gamepad2.dpad_right)
+                else if(gamepad2.dpad_right)
                 {
                     turretPos=1;
+
                 }
                 else if(gamepad2.dpad_left)
                 {
                     turretPos=0;
+                    turretLoc=0;
                 }
 
             }
+            else if(verticalSlide.getCurrentPosition()>=100)
+            {
+                if (gamepad2.right_trigger > 0.5)
+                {
+                    turretPos = 2;
+                    if(gamepad2.dpad_right)
+                    {
+                        turretLoc+=1;
+                    }
+                    else if(gamepad2.dpad_left)
+                    {
+                        turretLoc-=1;
+                    }
+                }
+                else if (gamepad2.right_trigger < 0.5)
+                {
+                    turretPos = 0;
+                    turretLoc=1;
+                }
+            }
+
 
 
 
@@ -180,11 +234,28 @@ public class TeleOP extends LinearOpMode {
             double testNum=rotatingPos/280d;
 
             telemetry.addData("NUM: ", testNum);
+            telemetry.addData("Turret loc: ", turretLoc);
+            telemetry.addData("Pos: ", rotatingBounds[turretPos]+(turretLoc/280d));
 
-            rotatingServo.setPosition(rotatingBounds[turretPos]);
+            rotatingServo.setPosition(rotatingBounds[turretPos]+(turretLoc/280d));
 
-            telemetry.addData("Servo Position", rotatingPos);
+            double trueLeftVal = -gamepad2.left_stick_y;
+
+            telemetry.addData("Servo Position", trueLeftVal);
             //Potential arm control
+            if(trueLeftVal>=0.5)
+            {
+                targetPos=highTarget;
+            }
+            else if(trueLeftVal<=-0.5)
+            {
+                targetPos=lowTarget;
+            }
+            else if(trueLeftVal<0.5 && trueLeftVal>-0.5)
+            {
+                targetPos= verticalSlide.getCurrentPosition();
+            }
+            /*
             if(gamepad2.dpad_up)
             {
                 targetPos=highTarget;
@@ -196,11 +267,11 @@ public class TeleOP extends LinearOpMode {
             else if(!gamepad2.dpad_down && !gamepad2.dpad_up)
             {
                 targetPos= verticalSlide.getCurrentPosition();
-            }
+            }*/
 
 
             verticalSlide.setPower(verticalSlidePower);
-            horizontalSlide.setPower(-horizontalSlidePower);
+            horizontalSlide.setPower(horizontalSlidePower);
 
             verticalSlide.setTargetPosition(targetPos);
 
@@ -226,7 +297,17 @@ public class TeleOP extends LinearOpMode {
             double backrightPower = (y + x - rx) / denominator;
 
             // pressurising the right trigger slows down the drive train
-            double coefficient = 1 - (gamepad1.right_trigger * 0.75);
+            double coefficient = 0.35;
+            if(gamepad1.right_trigger < 0.5)
+            {
+                telemetry.addData("Status", "trigger off");
+                coefficient=coefficient;
+            }
+            else
+            {
+                telemetry.addData("Status", "trigger on");
+                coefficient=1;
+            }
 
             telemetry.addData("Front Left Power", frontleftPower*coefficient);
             backrightDrive.setPower(backrightPower * coefficient);
@@ -236,9 +317,9 @@ public class TeleOP extends LinearOpMode {
 
 
             //update the toggles
-            //verticalClawToggle.update(gamepad2.a);
-            //horizontalClawToggle.update(gamepad2.b);
-            if(gamepad2.a)
+            verticalClawToggle.update(gamepad2.a);
+            horizontalClawToggle.update(gamepad1.b);
+            /*if(gamepad2.a)
             {
                 verticalClawServo.setPosition(verticalClawPositions[1]);
             }
@@ -254,13 +335,13 @@ public class TeleOP extends LinearOpMode {
             else if(gamepad2.y)
             {
                 horizontalClawServo.setPosition(horizontalClawPositions[0]);
-            }
+            }*/
 
 
 
             //update the servos
-            //verticalClawServo.setPosition(verticalClawPositions[verticalClawToggle.state ? 1 : 0]);
-            //horizontalClawServo.setPosition(horizontalClawPositions[horizontalClawToggle.state ? 1 : 0]);
+            verticalClawServo.setPosition(verticalClawPositions[verticalClawToggle.state ? 1 : 0]);
+            horizontalClawServo.setPosition(horizontalClawPositions[horizontalClawToggle.state ? 1 : 0]);
 
             telemetry.update();
         }
