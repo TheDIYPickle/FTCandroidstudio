@@ -7,55 +7,54 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name="teleopTest")
-
+@TeleOp(name="teleoptest")
 public class TeleOPTest extends LinearOpMode {
 
-    DcMotor lv;
-    DcMotor rv;
-
-
+    DcMotor verticalSlide;
+    DcMotor horizontalSlide;
 
     DcMotor backleftDrive;
     DcMotor backrightDrive;
     DcMotor frontleftDrive;
     DcMotor frontrightDrive;
 
-    Servo vertClawServo;
-    Servo horzClawServo;
-    Servo armServo;
+    Servo verticalClawServo;
+    Servo horizontalClawServo;
+    Servo rotatingServo;
 
     public BNO055IMU imu;
-    int trackNum= 0;
 
     public double angle;
 
-    public Toggle vertClawToggle = new Toggle(false);
-    public Toggle horzClawToggle = new Toggle(false);
-    public Toggle centricToggle = new Toggle(false);
-    public double[] leftClawPositions = new double[] {0.67, 0};
-    public double[] rightClawPositions = new double[] {0.67, 0};
+    public Toggle verticalClawToggle = new Toggle(false);
+    public Toggle horizontalClawToggle = new Toggle(false);
+    public double[] verticalClawPositions = new double[] {0, 0.37};
+    public double[] horizontalClawPositions = new double[] {0, 0.67};
 
 
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // arm is the bots right hand motor
-        rv = hardwareMap.dcMotor.get("arm");
-        lv = hardwareMap.dcMotor.get("arm2");
+        // linear slides
+        horizontalSlide = hardwareMap.dcMotor.get("hSlide");
+        verticalSlide = hardwareMap.dcMotor.get("vSlide");
+        int lowTarget = 5;
+        int highTarget = 4200;
 
-        lv.setDirection(DcMotorSimple.Direction.FORWARD);
-        rv.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        lv.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rv.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        rv.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //  lv.setDirection(DcMotorSimple.Direction.REVERSE);
+        horizontalSlide.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        vertClawServo = hardwareMap.servo.get("vertClaw");
-        horzClawServo = hardwareMap.servo.get("horzClaw");
+        verticalSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        horizontalSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        horizontalSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        verticalClawServo = hardwareMap.servo.get("verticalClaw");
+        horizontalClawServo = hardwareMap.servo.get("intakeClaw");
+        rotatingServo = hardwareMap.servo.get("turret");
 
         backleftDrive = hardwareMap.get(DcMotor.class, "backleftDrive");
         backrightDrive = hardwareMap.get(DcMotor.class, "backrightDrive");
@@ -71,6 +70,8 @@ public class TeleOPTest extends LinearOpMode {
         backrightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontleftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontrightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        horizontalSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        verticalSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -82,54 +83,198 @@ public class TeleOPTest extends LinearOpMode {
 
 
 
+
         waitForStart();
 
-        rv.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        horizontalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        verticalSlide.setTargetPosition(lowTarget);
+        verticalSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Please Change this
+        double rotatingPos = 36;
+        int turretPos=0;
+        double turretLoc=0;
+        int targetPos=0;
 
         while (opModeIsActive()) {
+            telemetry.addData("direction", imu.getAngularOrientation());
 
-            boolean surpassUpperBound = (rv.getCurrentPosition() >= 4500);
-            boolean surpassLowerBound = (rv.getCurrentPosition() <= 5);
+            if(gamepad1.y)
+            {
+                imu.initialize(parameters);
+                
 
-            telemetry.addData("Claw Active", vertClawToggle.state);
+            }
+
+            int rightSlidePos = -horizontalSlide.getCurrentPosition();
+            int leftSlidePos = verticalSlide.getCurrentPosition();
+
+            // [0] = lower bound
+            // [1] = upper bound
+            int[] rightBounds = {5, 4100};
+            int[] leftBounds = {5, 4200};
+
+            double[] rotatingBounds = {31/280d, 220/280d, 50/280d};
 
 
+
+            boolean isRightUpperBoundReached = (rightSlidePos >= rightBounds[1]);
+            boolean isRightLowerBoundReached = (rightSlidePos <= rightBounds[0]);
+            boolean isLeftUpperBoundReached = (leftSlidePos >= leftBounds[1]);
+            boolean isLeftLowerBoundReached = (leftSlidePos <= leftBounds[0]);
+            // Please change this but it already works
+//            boolean isRotatingUpperBounds = (True);
+//            boolean isRotatingLowerBounds = (True);
+
+            telemetry.addData("Vertical Claw Active", verticalClawToggle.state);
+            telemetry.addData("Horizontal Claw Active", horizontalClawToggle.state);
 
             //Gamepad stick power inversed for some reason, easy fix
             //i.e. When R stick pushed up it returned negative values
 
             //Upper and Lower Bounds
-            int armTarget=0;
-            double height=rv.getCurrentPosition();
-            double verticalSlidePower = -gamepad2.right_stick_y;
-            if(surpassUpperBound){
-                verticalSlidePower = Math.min(0, verticalSlidePower);
+            /*double horizontalSlidePower = horizontalSlide[];
+             */
+            double horizontalSlidePower = 0;
+            if(gamepad1.dpad_up && !isRightUpperBoundReached)
+            {
+                telemetry.addData("Pos", "1");
+                horizontalSlidePower = -0.7;
             }
-            if(surpassLowerBound){
-                verticalSlidePower = Math.max(0, verticalSlidePower);
+            else if(gamepad1.dpad_down && !isRightLowerBoundReached)
+            {
+                telemetry.addData("Pos", "2");
+                horizontalSlidePower = 0.7;
             }
 
-            if(gamepad1.dpad_up){
-                rv.setPower(verticalSlidePower);
-                armTarget = rv.getCurrentPosition() + 90;
-                rv.setTargetPosition(armTarget);
-                height=rv.getCurrentPosition();
-                telemetry.addData("Height", height);
-                telemetry.update();
+            /*if(isRightUpperBoundReached){
+                telemetry.addData("Pos", "3");
+                horizontalSlidePower = Math.min(0, horizontalSlidePower);
+            } else if(isRightLowerBoundReached){
+                telemetry.addData("Pos", "4");
+                horizontalSlidePower = Math.max(0, horizontalSlidePower);
+            }*/
+
+            //Upper and Lower Bounds
+            double verticalSlidePower = 0.75;
+            //double horizontalSlidePower = 0;
+
+            /*if(isLeftUpperBoundReached){
+                verticalSlidePower = Math.min(0, verticalSlidePower);
+            } else if(isLeftLowerBoundReached){
+                verticalSlidePower = Math.max(0, verticalSlidePower);
+            }*/
+
+            float rotatingDeltaCoefficient = 1f;
+            double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
+
+            if (rotatingPos <= rotatingBounds[0]) {
+                rotatingPos = rotatingBounds[0];
             }
-            if(gamepad1.dpad_down){
-                rv.setPower(verticalSlidePower);
-                armTarget = rv.getCurrentPosition() - 90;
-                rv.setTargetPosition(armTarget);
-                height=rv.getCurrentPosition();
-                telemetry.addData("Height", height);
-                telemetry.update();
+
+            if(verticalSlide.getCurrentPosition()<100)
+            {
+                if (gamepad2.right_trigger < 0.5)
+                {
+                    turretPos = 0;
+                    turretLoc=1;
+                }
             }
+            else if(verticalSlide.getCurrentPosition()>1050)
+            {
+                if(turretPos==1 && gamepad2.left_trigger>0.5)
+                {
+                    if(gamepad2.dpad_right)
+                    {
+                        turretLoc+=1;
+                    }
+                    else if(gamepad2.dpad_left)
+                    {
+                        turretLoc-=1;
+                    }
+                }
+
+                else if(gamepad2.dpad_right)
+                {
+                    turretPos=1;
+
+                }
+                else if(gamepad2.dpad_left)
+                {
+                    turretPos=0;
+                    turretLoc=0;
+                }
+                
+                else if(gamepad2.dpad_down)
+                {
+                    turretPos=0;
+                    turretLoc=0;
+                    targetPos=900;
+                }
+                
+
+            }
+            else if(verticalSlide.getCurrentPosition()>=100)
+            {
+                if (gamepad2.right_trigger > 0.5)
+                {
+                    turretPos = 2;
+                    if(gamepad2.dpad_right)
+                    {
+                        turretLoc+=1;
+                    }
+                    else if(gamepad2.dpad_left)
+                    {
+                        turretLoc-=1;
+                    }
+                }
+                else if (gamepad2.right_trigger < 0.5)
+                {
+                    turretPos = 0;
+                    turretLoc=1;
+                }
+            }
+
+
+
+
+
+            double testNum=rotatingPos/280d;
+
+            telemetry.addData("NUM: ", testNum);
+            telemetry.addData("Turret loc: ", turretLoc);
+            telemetry.addData("Pos: ", rotatingBounds[turretPos]+(turretLoc/280d));
+
+            rotatingServo.setPosition(rotatingBounds[turretPos]+(turretLoc/280d));
+
+            double trueLeftVal = -gamepad2.left_stick_y;
+
+            telemetry.addData("Servo Position", trueLeftVal);
+            //Potential arm control
+            if(trueLeftVal>=0.5)
+            {
+                targetPos=highTarget;
+            }
+            else if(trueLeftVal<=-0.5)
+            {
+                targetPos=lowTarget;
+            }
+            else if(trueLeftVal<0.5 && trueLeftVal>-0.5)
+            {
+                targetPos= verticalSlide.getCurrentPosition();
+            }
+            
+            
+
+
+            verticalSlide.setPower(verticalSlidePower);
+            horizontalSlide.setPower(horizontalSlidePower);
+
+            verticalSlide.setTargetPosition(targetPos);
 
 
             angle = imu.getAngularOrientation().firstAngle;
-            telemetry.addData("current Encoder value:",rv.getCurrentPosition());
-
+            telemetry.addData("current Encoder value:",verticalSlide.getCurrentPosition());
 
             double x = gamepad1.left_stick_x;
             double y = -gamepad1.left_stick_y;
@@ -138,17 +283,9 @@ public class TeleOPTest extends LinearOpMode {
             // rotates the left stick and changes the x & y values accordingly (field centric)
             Vector2D inputVector = new Vector2D(x, y);
             Vector2D rotatedVector = inputVector.rotateVector(-angle);
-            if(centricToggle.state=false)
-            {
-                x = rotatedVector.x;
-                y = rotatedVector.y;
-            }
-            else
-            {
-                x=x;
-                y=y;
-            }
 
+            x = rotatedVector.x;
+            y = rotatedVector.y;
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.1);
             double frontleftPower = (y + x + rx) / denominator;
@@ -157,7 +294,17 @@ public class TeleOPTest extends LinearOpMode {
             double backrightPower = (y + x - rx) / denominator;
 
             // pressurising the right trigger slows down the drive train
-            double coefficient = 1 - (gamepad1.right_trigger * 0.75);
+            double coefficient = 0.35;
+            if(gamepad1.right_trigger < 0.5)
+            {
+                telemetry.addData("Status", "trigger off");
+                coefficient=coefficient;
+            }
+            else
+            {
+                telemetry.addData("Status", "trigger on");
+                coefficient=1;
+            }
 
             telemetry.addData("Front Left Power", frontleftPower*coefficient);
             backrightDrive.setPower(backrightPower * coefficient);
@@ -167,19 +314,33 @@ public class TeleOPTest extends LinearOpMode {
 
 
             //update the toggles
-            vertClawToggle.updateToggle(gamepad2.a);
-            horzClawToggle.updateToggle(gamepad2.b);
-            centricToggle.updateToggle(gamepad2.x);
+            verticalClawToggle.update(gamepad2.a);
+            horizontalClawToggle.update(gamepad1.b);
+            /*if(gamepad2.a)
+            {
+                verticalClawServo.setPosition(verticalClawPositions[1]);
+            }
+            else if(gamepad2.b)
+            {
+                verticalClawServo.setPosition(verticalClawPositions[0]);
+            }
+
+            if(gamepad2.x)
+            {
+                horizontalClawServo.setPosition(horizontalClawPositions[1]);
+            }
+            else if(gamepad2.y)
+            {
+                horizontalClawServo.setPosition(horizontalClawPositions[0]);
+            }*/
+
+
 
             //update the servos
-            vertClawServo.setPosition(leftClawPositions[vertClawToggle.state ? 1 : 0]);
-            horzClawServo.setPosition(rightClawPositions[horzClawToggle.state ? 1 : 0]);
-
+            verticalClawServo.setPosition(verticalClawPositions[verticalClawToggle.state ? 1 : 0]);
+            horizontalClawServo.setPosition(horizontalClawPositions[horizontalClawToggle.state ? 1 : 0]);
 
             telemetry.update();
-
-            //claw manipulation
-
         }
     }
 
