@@ -95,6 +95,7 @@ public class TeleOPTest extends LinearOpMode {
         int turretPos=0;
         double turretLoc=0;
         int targetPos=0;
+        boolean downTrack = false;
 
         while (opModeIsActive()) {
             telemetry.addData("direction", imu.getAngularOrientation());
@@ -102,7 +103,7 @@ public class TeleOPTest extends LinearOpMode {
             if(gamepad1.y)
             {
                 imu.initialize(parameters);
-                
+
 
             }
 
@@ -139,12 +140,19 @@ public class TeleOPTest extends LinearOpMode {
             if(gamepad1.dpad_up && !isRightUpperBoundReached)
             {
                 telemetry.addData("Pos", "1");
+                horizontalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 horizontalSlidePower = -0.7;
             }
             else if(gamepad1.dpad_down && !isRightLowerBoundReached)
             {
                 telemetry.addData("Pos", "2");
+                horizontalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 horizontalSlidePower = 0.7;
+            }
+            else if(!gamepad1.dpad_down && !gamepad1.dpad_up)
+            {
+                horizontalSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                horizontalSlide.setTargetPosition(horizontalSlide.getCurrentPosition());
             }
 
             /*if(isRightUpperBoundReached){
@@ -163,10 +171,26 @@ public class TeleOPTest extends LinearOpMode {
                 verticalSlidePower = Math.min(0, verticalSlidePower);
             } else if(isLeftLowerBoundReached){
                 verticalSlidePower = Math.max(0, verticalSlidePower);
+
             }*/
+
 
             float rotatingDeltaCoefficient = 1f;
             double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
+            double trueLeftVal = -gamepad2.left_stick_y;
+
+            if(trueLeftVal>=0.5)
+            {
+                targetPos=highTarget;
+            }
+            else if(trueLeftVal<=-0.5)
+            {
+                targetPos=lowTarget;
+            }
+            else if(trueLeftVal<0.5 && trueLeftVal>-0.5)
+            {
+                targetPos= verticalSlide.getCurrentPosition();
+            }
 
             if (rotatingPos <= rotatingBounds[0]) {
                 rotatingPos = rotatingBounds[0];
@@ -179,6 +203,7 @@ public class TeleOPTest extends LinearOpMode {
                     turretPos = 0;
                     turretLoc=1;
                 }
+
             }
             else if(verticalSlide.getCurrentPosition()>1050)
             {
@@ -204,14 +229,20 @@ public class TeleOPTest extends LinearOpMode {
                     turretPos=0;
                     turretLoc=0;
                 }
-                
+
                 else if(gamepad2.dpad_down)
                 {
-                    turretPos=0;
+                    downTrack = true;
+                    turretPos=2;
                     turretLoc=0;
-                    targetPos=900;
+
+
                 }
-                
+
+
+
+
+
 
             }
             else if(verticalSlide.getCurrentPosition()>=100)
@@ -237,7 +268,19 @@ public class TeleOPTest extends LinearOpMode {
 
 
 
+            verticalSlide.setPower(verticalSlidePower);
+            horizontalSlide.setPower(horizontalSlidePower);
 
+            if(verticalSlide.getCurrentPosition()>900 && downTrack == true){
+                verticalSlide.setTargetPosition(900);
+            }
+            else if(verticalSlide.getCurrentPosition()<=900 && downTrack==true)
+            {
+                downTrack=false;
+            }
+            else {
+                verticalSlide.setTargetPosition(targetPos);
+            }
 
             double testNum=rotatingPos/280d;
 
@@ -247,30 +290,16 @@ public class TeleOPTest extends LinearOpMode {
 
             rotatingServo.setPosition(rotatingBounds[turretPos]+(turretLoc/280d));
 
-            double trueLeftVal = -gamepad2.left_stick_y;
+
 
             telemetry.addData("Servo Position", trueLeftVal);
             //Potential arm control
-            if(trueLeftVal>=0.5)
-            {
-                targetPos=highTarget;
-            }
-            else if(trueLeftVal<=-0.5)
-            {
-                targetPos=lowTarget;
-            }
-            else if(trueLeftVal<0.5 && trueLeftVal>-0.5)
-            {
-                targetPos= verticalSlide.getCurrentPosition();
-            }
-            
-            
 
 
-            verticalSlide.setPower(verticalSlidePower);
-            horizontalSlide.setPower(horizontalSlidePower);
 
-            verticalSlide.setTargetPosition(targetPos);
+
+
+
 
 
             angle = imu.getAngularOrientation().firstAngle;
