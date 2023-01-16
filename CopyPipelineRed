@@ -34,8 +34,8 @@ public class CopyPipelineRed extends OpenCvPipeline
     }
     private Colors colors;
     static final Rect target_BOX = new Rect(
-            new Point(150, 120),
-            new Point(210,140));
+            new Point(100, 120),
+            new Point(120,140));
     @Override
     public Mat processFrame(Mat input)
     {
@@ -43,18 +43,18 @@ public class CopyPipelineRed extends OpenCvPipeline
         Imgproc.cvtColor(input, secMat, Imgproc.COLOR_RGB2HLS);
         Imgproc.cvtColor(input, thirdMat, Imgproc.COLOR_RGB2HLS);
         Imgproc.cvtColor(input, fourMat, Imgproc.COLOR_RGB2HLS);
-        Scalar lowHSLRedLow = new Scalar(0,44,0);
-        Scalar lowHSLRedHigh = new Scalar(23,62,90);
+        Scalar lowHSLRedLow = new Scalar(0,10,0);
+        Scalar lowHSLRedHigh = new Scalar(23,255,250);
 
-        Scalar lowHSLGreen= new Scalar(56,0,83);
-        Scalar highHSLGreen= new Scalar(81,226,255);
+        Scalar lowHSLGreen= new Scalar(56,0,10);
+        Scalar highHSLGreen= new Scalar(88,255,255);
 
-        Scalar lowHSLBlue = new Scalar(83,3,100);
-        Scalar highHSLBlue = new Scalar(166,205,255);
+        Scalar lowHSLBlue = new Scalar(90,3,50);
+        Scalar highHSLBlue = new Scalar(166,255,255);
 
 
 
-        Scalar highHSLRedLow = new Scalar(179,215,245);
+        Scalar highHSLRedLow = new Scalar(170,10,10);
         Scalar highHSLRedHigh = new Scalar(179,255,255);
 
 
@@ -161,9 +161,9 @@ public class CopyPipelineRed extends OpenCvPipeline
         //cameraMat.release();
         //Imgproc.cvtColor(cameraMat, cameraMat, Imgproc.COLOR_GRAY2RGB);
 
-        //Scalar targetBox= new Scalar(255,0,0);
+        Scalar targetBox= new Scalar(255,0,0);
 
-        //Imgproc.rectangle(cameraMat, target_BOX, targetBox);
+        Imgproc.rectangle(input, target_BOX, targetBox);
 
         return input;
 
