@@ -102,7 +102,7 @@ public class TeleOP extends LinearOpMode {
 
             if(gamepad1.y)
             {
-                imu.initialize(parameters);
+                imu.resetYaw();
 
 
             }
