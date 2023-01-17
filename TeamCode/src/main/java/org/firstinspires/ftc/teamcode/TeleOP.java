@@ -76,10 +76,20 @@ public class TeleOP extends LinearOpMode {
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-
-        imu.initialize(parameters);
+        //BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        //parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        
+        //This is the potential imu starting program
+        
+        telemetry.addData("Direction Mode:" , "Back Mode");
+        imu.initialize(
+            new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                    RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                    RevHubOrientationOnRobot.UsbFacingDirection.UP
+                ) 
+            )
+        );
 
 
 
@@ -102,7 +112,30 @@ public class TeleOP extends LinearOpMode {
 
             if(gamepad1.y)
             {
-                imu.resetYaw();
+                telemetry.addData("Direction Mode:" , "Back Mode");
+                imu.initialize(
+                    new IMU.Parameters(
+                        new RevHubOrientationOnRobot(
+                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                            RevHubOrientationOnRobot.UsbFacingDirection.UP
+                        ) 
+                    )
+                );
+
+
+            }
+            
+            else if(gamepad1.a)
+            {
+                telemetry.addData("Direction Mode:" , "Forward Mode");
+                imu.initialize(
+                    new IMU.Parameters(
+                        new RevHubOrientationOnRobot(
+                            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                            RevHubOrientationOnRobot.UsbFacingDirection.UP
+                        ) 
+                    )
+                );
 
 
             }
