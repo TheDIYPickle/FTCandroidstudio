@@ -139,8 +139,8 @@ public class AutoMovement extends LinearOpMode {
         backrightDrive = hardwareMap.get(DcMotor.class, "backrightDrive");
         frontleftDrive = hardwareMap.get(DcMotor.class, "frontleftDrive");
         frontrightDrive = hardwareMap.get(DcMotor.class, "frontrightDrive");
-        //counterWeight = hardwareMap.get(DcMotor.class, "counterWeight");
-        //Potato = hardwareMap.get(DcMotor.class, "Potato");
+
+
 
 
 
@@ -162,7 +162,7 @@ public class AutoMovement extends LinearOpMode {
         backrightDrive.setDirection(DcMotor.Direction.FORWARD);
         frontleftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontrightDrive.setDirection(DcMotor.Direction.FORWARD);
-        //counterWeight.setDirection(DcMotor.Direction.FORWARD);
+
 
 
         backleftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -230,8 +230,9 @@ public class AutoMovement extends LinearOpMode {
         mainCam.setPipeline(pipeline);
         //I recommend having the program wait for five seconds to get rid of any startup lighting bugs
         sleep(5000);
-        //This doesn’t turn off the camera, it just tells it to stop streaming
+        //This doesn’t turn off the camera, it just tells it to stop streaming: important distinction to make
         mainCam.stopStreaming();
+				//This checks if the picturVar is false, if it is, do the image processing and decision making
         if (pictureVar == false) {
             if(pipeline.ColorType()==CopyPipelineRed.Colors.Color1) {
                 finalLocation = "1";
@@ -245,6 +246,7 @@ public class AutoMovement extends LinearOpMode {
                 finalLocation = "3";
                 pictureVar = true;
             }
+						//This is a fail case
             else{
                 telemetry.addData("Status", "Option fail");
                 telemetry.update();
@@ -252,11 +254,12 @@ public class AutoMovement extends LinearOpMode {
             }
 
         }
+				//This is actually how you turn off the camera
         mainCam.closeCameraDevice();
         telemetry.addData("Position", "target " + finalLocation);
         telemetry.update();
         sleep(2000);
-
+				//and this is just checking which value is finalLocation, and moving to the corresponding location
         /*if(finalLocation=="1"){
             Left(1300);
             sleep(2400);
