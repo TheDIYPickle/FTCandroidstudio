@@ -125,7 +125,7 @@ public class TeleOP extends LinearOpMode {
 
             }
             
-            else if(gamepad1.a)
+            else if(gamepad1.b)
             {
                 telemetry.addData("Direction Mode:" , "Forward Mode");
                 imu.initialize(
@@ -377,7 +377,7 @@ public class TeleOP extends LinearOpMode {
 
             //update the toggles
             verticalClawToggle.update(gamepad2.a);
-            horizontalClawToggle.update(gamepad1.b);
+            horizontalClawToggle.update(gamepad1.a);
             /*if(gamepad2.a)
             {
                 verticalClawServo.setPosition(verticalClawPositions[1]);
