@@ -232,9 +232,10 @@ public class AutoMovement extends LinearOpMode {
         sleep(5000);
         //This doesn’t turn off the camera, it just tells it to stop streaming: important distinction to make
         mainCam.stopStreaming();
-				//This checks if the picturVar is false, if it is, do the image processing and decision making
+	//This checks if the picturVar is false, if it is, do the image processing and decision making, and then set it to true so it never happens again.
         if (pictureVar == false) {
             if(pipeline.ColorType()==CopyPipelineRed.Colors.Color1) {
+	    	//finalLocation is just here to tell the computer definitively where to go
                 finalLocation = "1";
                 pictureVar = true;
             }
@@ -246,7 +247,7 @@ public class AutoMovement extends LinearOpMode {
                 finalLocation = "3";
                 pictureVar = true;
             }
-						//This is a fail case
+	    //This is a fail case
             else{
                 telemetry.addData("Status", "Option fail");
                 telemetry.update();
@@ -254,12 +255,12 @@ public class AutoMovement extends LinearOpMode {
             }
 
         }
-				//This is actually how you turn off the camera
+	//This is actually how you turn off the camera
         mainCam.closeCameraDevice();
         telemetry.addData("Position", "target " + finalLocation);
         telemetry.update();
         sleep(2000);
-				//and this is just checking which value is finalLocation, and moving to the corresponding location
+	//and this is just checking which value is finalLocation, and moving to the corresponding location
         /*if(finalLocation=="1"){
             Left(1300);
             sleep(2400);
