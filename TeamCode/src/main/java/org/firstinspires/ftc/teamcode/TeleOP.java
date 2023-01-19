@@ -76,20 +76,15 @@ public class TeleOP extends LinearOpMode {
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
-        //BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        //parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+
         //This is the potential imu starting program
-        
+
         telemetry.addData("Direction Mode:" , "Back Mode");
-        imu.initialize(
-            new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                    RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                    RevHubOrientationOnRobot.UsbFacingDirection.UP
-                ) 
-            )
-        );
+        imu.initialize(parameters);
+
+
 
 
 
@@ -107,38 +102,20 @@ public class TeleOP extends LinearOpMode {
         int targetPos=0;
         boolean downTrack = false;
 
+
         while (opModeIsActive()) {
             telemetry.addData("direction", imu.getAngularOrientation());
 
             if(gamepad1.y)
             {
-                telemetry.addData("Direction Mode:" , "Back Mode");
-                imu.initialize(
-                    new IMU.Parameters(
-                        new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                            RevHubOrientationOnRobot.UsbFacingDirection.UP
-                        ) 
-                    )
-                );
-
-
-            }
-            
-            else if(gamepad1.b)
-            {
                 telemetry.addData("Direction Mode:" , "Forward Mode");
-                imu.initialize(
-                    new IMU.Parameters(
-                        new RevHubOrientationOnRobot(
-                            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                            RevHubOrientationOnRobot.UsbFacingDirection.UP
-                        ) 
-                    )
-                );
+                imu.initialize(parameters);
+
 
 
             }
+
+
 
             int rightSlidePos = -horizontalSlide.getCurrentPosition();
             int leftSlidePos = verticalSlide.getCurrentPosition();
@@ -327,6 +304,8 @@ public class TeleOP extends LinearOpMode {
 
             telemetry.addData("Servo Position", trueLeftVal);
             //Potential arm control
+
+
 
 
 
