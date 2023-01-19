@@ -27,7 +27,6 @@ public class CopyPipelineRed extends OpenCvPipeline
     Mat secMat= new Mat();
     Mat thirdMat= new Mat();
     Mat fourMat= new Mat();
-    //This is where the color options are held
     public enum Colors{
         Color1,
         Color2,
@@ -35,8 +34,8 @@ public class CopyPipelineRed extends OpenCvPipeline
     }
     private Colors colors;
     static final Rect target_BOX = new Rect(
-            new Point(100, 120),
-            new Point(120,140));
+            new Point(210, 120),
+            new Point(220,140));
     @Override
     public Mat processFrame(Mat input)
     {
@@ -126,14 +125,12 @@ public class CopyPipelineRed extends OpenCvPipeline
         //telemetry.addData("Fourth percent", Math.round(secTargetValOne*100)+"%");
         telemetry.update();
 
-        //This part takes in all the percentages of color and finds which is the largest
+
         double greaterNumberOne = Math.max(targetValOne, targetValTwo);
         double greaterNumberTwo = Math.max(greaterNumberOne, targetValThree);
         //Mat cameraMat = new Mat();
 
-        //This part of the code figures out where the largest number came from
         if(targetValOne==greaterNumberTwo){
-            //This assigns the varible "colors" to the color option we desire
             colors= Colors.Color1;
             //cameraMat=mat;
             telemetry.addData("Color found", "color one");
@@ -161,18 +158,18 @@ public class CopyPipelineRed extends OpenCvPipeline
 
         }
 
-        //This draws a targeting box on the screen(This is practically useless now because this pipeline is activated on start, this is just here for debugging purposes)
+        //cameraMat.release();
         //Imgproc.cvtColor(cameraMat, cameraMat, Imgproc.COLOR_GRAY2RGB);
 
         Scalar targetBox= new Scalar(255,0,0);
 
         Imgproc.rectangle(input, target_BOX, targetBox);
-        //This returns the changed frame, remember: Every OpenCV function MUST have a return function at the end regardless of anything
+
         return input;
 
     }
     public Colors ColorType(){
-        //This is the part that actually returns what color the program found. Remember, this is a class, meaning you will have to call it as shown in the AutoMovement program
+
         return colors;
     }
 }
