@@ -157,7 +157,7 @@ public class TeleOP extends LinearOpMode {
             {
                 telemetry.addData("Pos", "2");
                 horizontalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                horizontalSlidePower = 0.7;
+                horizontalSlidePower = 0.9;
             }
             else if(!gamepad1.dpad_down && !gamepad1.dpad_up)
             {
