@@ -31,8 +31,8 @@ public class CopyPipeline extends OpenCvPipeline
     }
     private Colors colors;
     static final Rect target_BOX = new Rect(
-            new Point(100, 120),
-            new Point(120,140));
+            new Point(210, 120),
+            new Point(220,140));
     @Override
     public Mat processFrame(Mat input)
     {
