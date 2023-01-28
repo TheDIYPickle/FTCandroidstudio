@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.teleops;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.Toggle;
 
 @TeleOp(name="teleop")
 public class TeleOP extends LinearOpMode {
@@ -31,8 +33,6 @@ public class TeleOP extends LinearOpMode {
     public double[] verticalClawPositions = new double[] {0, 0.37};
     public double[] horizontalClawPositions = new double[] {0, 0.67};
 
-
-
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -41,8 +41,6 @@ public class TeleOP extends LinearOpMode {
         verticalSlide = hardwareMap.dcMotor.get("vSlide");
         int lowTarget = 5;
         int highTarget = 4200;
-
-
 
         //  lv.setDirection(DcMotorSimple.Direction.REVERSE);
         horizontalSlide.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -84,11 +82,6 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Direction Mode:" , "Back Mode");
         imu.initialize(parameters);
 
-
-
-
-
-
         waitForStart();
 
         horizontalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -110,12 +103,7 @@ public class TeleOP extends LinearOpMode {
             {
                 telemetry.addData("Direction Mode:" , "Forward Mode");
                 imu.initialize(parameters);
-
-
-
             }
-
-
 
             int rightSlidePos = -horizontalSlide.getCurrentPosition();
             int leftSlidePos = verticalSlide.getCurrentPosition();
@@ -127,15 +115,10 @@ public class TeleOP extends LinearOpMode {
 
             double[] rotatingBounds = {31/280d, 220/280d, 50/280d};
 
-
-
             boolean isRightUpperBoundReached = (rightSlidePos >= rightBounds[1]);
             boolean isRightLowerBoundReached = (rightSlidePos <= rightBounds[0]);
             boolean isLeftUpperBoundReached = (leftSlidePos >= leftBounds[1]);
             boolean isLeftLowerBoundReached = (leftSlidePos <= leftBounds[0]);
-            // Please change this but it already works
-//            boolean isRotatingUpperBounds = (True);
-//            boolean isRotatingLowerBounds = (True);
 
             telemetry.addData("Vertical Claw Active", verticalClawToggle.state);
             telemetry.addData("Horizontal Claw Active", horizontalClawToggle.state);
@@ -144,8 +127,6 @@ public class TeleOP extends LinearOpMode {
             //i.e. When R stick pushed up it returned negative values
 
             //Upper and Lower Bounds
-            /*double horizontalSlidePower = horizontalSlide[];
-             */
             double horizontalSlidePower = 0;
             if(gamepad1.dpad_up && !isRightUpperBoundReached)
             {
@@ -165,25 +146,8 @@ public class TeleOP extends LinearOpMode {
                 horizontalSlide.setTargetPosition(horizontalSlide.getCurrentPosition());
             }
 
-            /*if(isRightUpperBoundReached){
-                telemetry.addData("Pos", "3");
-                horizontalSlidePower = Math.min(0, horizontalSlidePower);
-            } else if(isRightLowerBoundReached){
-                telemetry.addData("Pos", "4");
-                horizontalSlidePower = Math.max(0, horizontalSlidePower);
-            }*/
-
             //Upper and Lower Bounds
             double verticalSlidePower = 0.75;
-            //double horizontalSlidePower = 0;
-
-            /*if(isLeftUpperBoundReached){
-                verticalSlidePower = Math.min(0, verticalSlidePower);
-            } else if(isLeftLowerBoundReached){
-                verticalSlidePower = Math.max(0, verticalSlidePower);
-
-            }*/
-
 
             float rotatingDeltaCoefficient = 1f;
             double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
@@ -213,7 +177,6 @@ public class TeleOP extends LinearOpMode {
                     turretPos = 0;
                     turretLoc=1;
                 }
-
             }
             else if(verticalSlide.getCurrentPosition()>1050)
             {
@@ -248,12 +211,6 @@ public class TeleOP extends LinearOpMode {
 
 
                 }
-
-
-
-
-
-
             }
             else if(verticalSlide.getCurrentPosition()>=100)
             {
@@ -275,8 +232,6 @@ public class TeleOP extends LinearOpMode {
                     turretLoc=1;
                 }
             }
-
-
 
             verticalSlide.setPower(verticalSlidePower);
             horizontalSlide.setPower(horizontalSlidePower);
@@ -300,19 +255,8 @@ public class TeleOP extends LinearOpMode {
 
             rotatingServo.setPosition(rotatingBounds[turretPos]+(turretLoc/280d));
 
-
-
             telemetry.addData("Servo Position", trueLeftVal);
             //Potential arm control
-
-
-
-
-
-
-
-
-
 
             angle = imu.getAngularOrientation().firstAngle;
             telemetry.addData("current Encoder value:",verticalSlide.getCurrentPosition());
@@ -357,25 +301,6 @@ public class TeleOP extends LinearOpMode {
             //update the toggles
             verticalClawToggle.update(gamepad2.a);
             horizontalClawToggle.update(gamepad1.a);
-            /*if(gamepad2.a)
-            {
-                verticalClawServo.setPosition(verticalClawPositions[1]);
-            }
-            else if(gamepad2.b)
-            {
-                verticalClawServo.setPosition(verticalClawPositions[0]);
-            }
-
-            if(gamepad2.x)
-            {
-                horizontalClawServo.setPosition(horizontalClawPositions[1]);
-            }
-            else if(gamepad2.y)
-            {
-                horizontalClawServo.setPosition(horizontalClawPositions[0]);
-            }*/
-
-
 
             //update the servos
             verticalClawServo.setPosition(verticalClawPositions[verticalClawToggle.state ? 1 : 0]);
