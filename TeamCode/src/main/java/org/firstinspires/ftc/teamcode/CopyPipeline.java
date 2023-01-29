@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.CVPipelines;
+package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Core;
@@ -33,10 +33,10 @@ public class CopyPipeline extends OpenCvPipeline
     static final Rect target_BOX = new Rect(
             new Point(210, 120),
             new Point(220,140));
+
     @Override
     public Mat processFrame(Mat input)
     {
-        //Imgproc.cvtColor(input, mat, Imgproc.COLOR_RGB2HLS);
         mat=input;
         Scalar lowHSVOne = new Scalar(0,72,138);
         Scalar lowHSVTwo = new Scalar(78,3,120);
@@ -46,12 +46,6 @@ public class CopyPipeline extends OpenCvPipeline
         Scalar highHSVThree= new Scalar(81,226,255);
         Scalar lowTest = new Scalar(0,0,0);
         Scalar highTest= new Scalar(255,255,255);
-
-        //first color test
-        //Core.inRange(mat, lowTest, highTest, mat);
-
-
-        //Imgproc.cvtColor(mat, mat, Imgproc.COLOR_GRAY2RGB);
 
         Scalar targetBox= new Scalar(255,0,0);
 

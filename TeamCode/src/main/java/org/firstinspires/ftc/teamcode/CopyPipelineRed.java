@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.CVPipelines;
+package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Core;
@@ -68,9 +68,6 @@ public class CopyPipelineRed extends OpenCvPipeline
         Mat targetSec= secMat.submat(target_BOX);
         Mat targetThir= thirdMat.submat(target_BOX);
         Mat targetFour = fourMat.submat(target_BOX);
-        //input.release();
-
-
 
         //first color test part one
         Core.inRange(mat, lowHSLRedLow, lowHSLRedHigh, mat);
@@ -110,56 +107,33 @@ public class CopyPipelineRed extends OpenCvPipeline
         targetFour = mat.submat(target_BOX);
         //This finds which percent of the screen is whatever color we want
         double targetValOneHalf= Core.sumElems(targetFour).val[0] / target_BOX.area() / 255;
-        //telemetry.addData("Target box value", (int) Core.sumElems(target).val[0]);
         targetFour.release();
         fourMat.release();
 
-        //double secTargetValOne=targetValOne+targetValOneHalf;
         targetValOne = targetValOne+targetValOneHalf;
-        //targetValOne=0;
 
         telemetry.addData("First Color percent", Math.round(targetValOne*100) + "%");
         telemetry.addData("Second Color percent", Math.round(targetValTwo*100) + "%");
         telemetry.addData("Third percent", Math.round(targetValThree*100) + "%");
         telemetry.addData("Fourth percent", Math.round(targetValOneHalf*100)+"%");
-        //telemetry.addData("Fourth percent", Math.round(secTargetValOne*100)+"%");
         telemetry.update();
 
 
         double greaterNumberOne = Math.max(targetValOne, targetValTwo);
         double greaterNumberTwo = Math.max(greaterNumberOne, targetValThree);
-        //Mat cameraMat = new Mat();
 
         if(targetValOne==greaterNumberTwo){
             colors= Colors.Color1;
-            //cameraMat=mat;
             telemetry.addData("Color found", "color one");
-            //mat.release();
-            //secMat.release();
-            //thirdMat.release();
-
         }
         else if(targetValTwo==greaterNumberTwo){
             colors= Colors.Color2;
-            //cameraMat=secMat;
             telemetry.addData("Color found", "color two");
-            //mat.release();
-            //secMat.release();
-            //thirdMat.release();
-
         }
         else if(targetValThree==greaterNumberTwo){
             colors= Colors.Color3;
-            //cameraMat=thirdMat;
             telemetry.addData("Color found", "color three");
-            //mat.release();
-            //secMat.release();
-            //thirdMat.release();
-
         }
-
-        //cameraMat.release();
-        //Imgproc.cvtColor(cameraMat, cameraMat, Imgproc.COLOR_GRAY2RGB);
 
         Scalar targetBox= new Scalar(255,0,0);
 
