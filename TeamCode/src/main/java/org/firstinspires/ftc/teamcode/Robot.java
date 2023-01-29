@@ -118,4 +118,12 @@ public class Robot {
     public void setHorizontalClawPosition(Integer input) {
         horizontalClawServo.setPosition(input);
     }
+
+    public void setVerticalSlide(Integer input) {
+        verticalSlide.setTargetPosition(input);
+    }
+
+    public void setHorizontalSlide(Integer input) {
+        horizontalSlide.setTargetPosition(input);
+    }
 }
