@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name="teleoptest")
 public class TeleOPTest extends LinearOpMode {
@@ -28,9 +29,22 @@ public class TeleOPTest extends LinearOpMode {
 
     public Toggle verticalClawToggle = new Toggle(false);
     public Toggle horizontalClawToggle = new Toggle(false);
+    public Toggle reset = new Toggle(false);
     public double[] verticalClawPositions = new double[] {0, 0.37};
-    public double[] horizontalClawPositions = new double[] {0, 0.67};
+    public double[] horizontalClawPositions = new double[] {0.3, 0.67};
+    private ElapsedTime runtime = new ElapsedTime();
+    private double servoPosition;
 
+    //tweak these values for desired speed
+    private double servoDelta = 0.8;
+    private double servoDelayTime = 0.5;
+    boolean rightTurn = false;
+    boolean leftTurn = false;
+    public static double sigmoid(int input)
+    {
+        double sigma = 1/1+Math.exp(-input);
+        return sigma;
+    }
 
 
     @Override
@@ -39,8 +53,9 @@ public class TeleOPTest extends LinearOpMode {
         // linear slides
         horizontalSlide = hardwareMap.dcMotor.get("hSlide");
         verticalSlide = hardwareMap.dcMotor.get("vSlide");
-        int lowTarget = 5;
+        int lowTarget = 3;
         int highTarget = 4200;
+
 
 
 
@@ -79,7 +94,13 @@ public class TeleOPTest extends LinearOpMode {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
 
+        //This is the potential imu starting program
+
+        telemetry.addData("Direction Mode:" , "Back Mode");
         imu.initialize(parameters);
+
+        runtime.reset();
+
 
 
 
@@ -91,21 +112,27 @@ public class TeleOPTest extends LinearOpMode {
         verticalSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Please Change this
-        double rotatingPos = 36;
+        double rotatingPos = 37;
         int turretPos=0;
         double turretLoc=0;
         int targetPos=0;
         boolean downTrack = false;
+
+
 
         while (opModeIsActive()) {
             telemetry.addData("direction", imu.getAngularOrientation());
 
             if(gamepad1.y)
             {
+                telemetry.addData("Direction Mode:" , "Forward Mode");
                 imu.initialize(parameters);
 
 
+
             }
+
+
 
             int rightSlidePos = -horizontalSlide.getCurrentPosition();
             int leftSlidePos = verticalSlide.getCurrentPosition();
@@ -113,9 +140,10 @@ public class TeleOPTest extends LinearOpMode {
             // [0] = lower bound
             // [1] = upper bound
             int[] rightBounds = {5, 4100};
-            int[] leftBounds = {5, 4200};
+            int[] leftBounds = {2, 4200};
 
-            double[] rotatingBounds = {31/280d, 220/280d, 50/280d};
+            double[] rotatingBounds = {36/280d, 220/280d, 50/280d};
+
 
 
 
@@ -147,7 +175,7 @@ public class TeleOPTest extends LinearOpMode {
             {
                 telemetry.addData("Pos", "2");
                 horizontalSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                horizontalSlidePower = 0.7;
+                horizontalSlidePower = 1;
             }
             else if(!gamepad1.dpad_down && !gamepad1.dpad_up)
             {
@@ -179,18 +207,38 @@ public class TeleOPTest extends LinearOpMode {
             double rotatingDelta = (gamepad2.dpad_right ? 1 : gamepad2.dpad_left ? -1 : 0) * rotatingDeltaCoefficient;
             double trueLeftVal = -gamepad2.left_stick_y;
 
-            if(trueLeftVal>=0.5)
+
+            if(reset.state==true)
             {
-                targetPos=highTarget;
+                if(trueLeftVal>=0.5)
+                {
+                    targetPos=highTarget;
+                }
+                else if(trueLeftVal<=-0.5)
+                {
+                    targetPos=verticalSlide.getCurrentPosition()-1;
+                }
+                else if(trueLeftVal<0.5 && trueLeftVal>-0.5)
+                {
+                    targetPos= verticalSlide.getCurrentPosition();
+                }
             }
-            else if(trueLeftVal<=-0.5)
+            else {
+                if (trueLeftVal >= 0.5) {
+                    targetPos = highTarget;
+                } else if (trueLeftVal <= -0.5) {
+                    targetPos = lowTarget;
+                } else if (trueLeftVal < 0.5 && trueLeftVal > -0.5) {
+                    targetPos = verticalSlide.getCurrentPosition();
+                }
+            }
+
+            if(gamepad2.x)
             {
-                targetPos=lowTarget;
+                verticalSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                verticalSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
-            else if(trueLeftVal<0.5 && trueLeftVal>-0.5)
-            {
-                targetPos= verticalSlide.getCurrentPosition();
-            }
+
 
             if (rotatingPos <= rotatingBounds[0]) {
                 rotatingPos = rotatingBounds[0];
@@ -239,11 +287,6 @@ public class TeleOPTest extends LinearOpMode {
 
                 }
 
-
-
-
-
-
             }
             else if(verticalSlide.getCurrentPosition()>=100)
             {
@@ -279,28 +322,67 @@ public class TeleOPTest extends LinearOpMode {
                 downTrack=false;
             }
             else {
+
                 verticalSlide.setTargetPosition(targetPos);
             }
 
             double testNum=rotatingPos/280d;
 
+
             telemetry.addData("NUM: ", testNum);
-            telemetry.addData("Turret loc: ", turretLoc);
             telemetry.addData("Pos: ", rotatingBounds[turretPos]+(turretLoc/280d));
+            telemetry.addData("Turret pos: ", rotatingPos);
 
-            rotatingServo.setPosition(rotatingBounds[turretPos]+(turretLoc/280d));
+            if(gamepad2.dpad_right)
+            {
+                rightTurn = true;
 
+            }
+
+            if(gamepad2.dpad_left)
+            {
+                leftTurn = true;
+
+            }
+
+
+
+            if(rightTurn ==true && servoPosition/280d<rotatingBounds[1]) {
+
+                    servoPosition += servoDelta;
+                    // clip the position values so that they never exceed 0..1
+                    //servoPosition = Range.clip(servoPosition, 0, 1);
+
+
+
+            }
+            else if(rightTurn == true && servoPosition/280d>=rotatingBounds[1])
+            {
+                rightTurn = false;
+            }
+
+            //left slow
+            if(leftTurn ==true && servoPosition/280d>rotatingBounds[0]) {
+
+                servoPosition -= servoDelta;
+                // clip the position values so that they never exceed 0..1
+                //servoPosition = Range.clip(servoPosition, 0, 1);
+                //runtime.reset();
+
+
+            }
+            else if(rightTurn == true && servoPosition/280d<=rotatingBounds[0])
+            {
+                leftTurn = false;
+            }
+
+            rotatingServo.setPosition((servoPosition/280d) + (turretLoc / 280d));
 
 
             telemetry.addData("Servo Position", trueLeftVal);
+            telemetry.addData("True", servoPosition/280);
+            telemetry.addData("Check", rightTurn);
             //Potential arm control
-
-
-
-
-
-
-
 
             angle = imu.getAngularOrientation().firstAngle;
             telemetry.addData("current Encoder value:",verticalSlide.getCurrentPosition());
@@ -344,24 +426,10 @@ public class TeleOPTest extends LinearOpMode {
 
             //update the toggles
             verticalClawToggle.update(gamepad2.a);
-            horizontalClawToggle.update(gamepad1.b);
-            /*if(gamepad2.a)
-            {
-                verticalClawServo.setPosition(verticalClawPositions[1]);
-            }
-            else if(gamepad2.b)
-            {
-                verticalClawServo.setPosition(verticalClawPositions[0]);
-            }
+            horizontalClawToggle.update(gamepad1.a);
+            telemetry.addData("Bounds", reset.state);
+            reset.update(gamepad2.y);
 
-            if(gamepad2.x)
-            {
-                horizontalClawServo.setPosition(horizontalClawPositions[1]);
-            }
-            else if(gamepad2.y)
-            {
-                horizontalClawServo.setPosition(horizontalClawPositions[0]);
-            }*/
 
 
 
@@ -370,7 +438,7 @@ public class TeleOPTest extends LinearOpMode {
             horizontalClawServo.setPosition(horizontalClawPositions[horizontalClawToggle.state ? 1 : 0]);
 
             telemetry.update();
-        }
+}
     }
 
 
