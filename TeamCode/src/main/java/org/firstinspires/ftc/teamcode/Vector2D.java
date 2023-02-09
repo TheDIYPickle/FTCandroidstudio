@@ -15,4 +15,11 @@ public class Vector2D {
 
         return new Vector2D(x2, y2);
     }
+
+    public Vector2D multiply(double coefficient) {
+        double x2 = x * coefficient;
+        double y2 = y * coefficient;
+
+        return new Vector2D(x2, y2);
+    }
 }

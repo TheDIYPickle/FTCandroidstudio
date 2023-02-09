@@ -52,6 +52,11 @@ public class AutoMovement extends LinearOpMode {
 
         //Basic hardware mapping
         rob = new Robot(hardwareMap);
+        rob.setWheelZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rob.setWheelMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rob.setWheelTargetPosition(0);
+        rob.setWheelMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rob.setWheelPower(0.3);
 
         //This is the function I use to turn on the camera, I recommend you just copy paste this from here to line 224. This allows the camera to try and open, and if it fails, send out an error message
         mainCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
